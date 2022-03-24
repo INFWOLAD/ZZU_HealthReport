@@ -82,13 +82,22 @@ class jksb:
         html.encoding = 'utf-8' #这一行是将编码转为utf-8否则中文会显示乱码。
         html = html.text
         soup1 = BeautifulSoup(html,'html.parser')
+        pattern = re.compile(r'【[A-Z]】')
+        pattern2 = re.compile(r'(13[0-9]|14[5|7]|15[0|1|2|3|4|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\d{8}')
         
         datas = soup1.find('span')
+        batch = soup1.find(text=pattern)
+        phonenum = soup1.find(text=pattern2)
         datas = datas.string
+        batch = batch.string
+        if phonenum != None:
+            phonenum = phonenum.string
+        else:
+            phonenum = "请到健康打卡系统填写电话号码"
         datas.encoding = 'utf-8'
 
         if datas=="今日您已经填报过了":
-            return False
+            return False, batch, phonenum
         else:
             post_data = soup1.findAll('input')
             res = []
@@ -101,7 +110,7 @@ class jksb:
             jksb_data['sid'] = res[4]
             self.submit_data['door'] = jksb_data['door']
             self.submit_data['men6'] = jksb_data['men6']
-            return True
+            return True, batch, phonenum
     def post_url(self):
         session = requests.Session()
         html = session.post('https://jksb.v.zzu.edu.cn/vls6sss/zzujksb.dll/login',  data = self.post_data,headers = hea1,verify = verify_path)
